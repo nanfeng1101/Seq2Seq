@@ -1,5 +1,5 @@
 # Seq2Seq
-seq2seq for chatbot and translate using theano, tensorflow and pytorch.
+seq2seq model for chatbot and translate using theano, tensorflow and pytorch.
 
 # Requirement
 numpy
