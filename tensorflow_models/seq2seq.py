@@ -35,7 +35,39 @@ class Encoder(object):
             out, state = tf.nn.dynamic_rnn(self.gru_cell, out, sequence_length=sequence_length, initial_state=state, dtype=tf.float32)
         return out, state
 
-
+class Decoder(object):
+    """
+    seq2seq decoder
+    """
+    def __init__(self, embedding, hidden_size, vocab_size, num_layers=1, keep_prop=0.9):
+        """
+        init.
+        :param embedding: embedding
+        :param hidden_size: hidden size
+        :param vocab_size: vocabulary size
+        :param num_layers: num of layers
+        """
+        self.embedding = embedding
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.gru_cell = rnn.GRUCell(self.hidden_size)
+        self.linear = tf.Variable(tf.random_normal(shape=(self.hidden_size, self.vocab_size)) * 0.1)
+        
+    def __call__(inputs, state):
+        """
+        decoder using gru.
+        :param inputs: word indices(batch, )
+        :param state: final state
+        :return:
+        """
+        output = tf.nn.dropout(tf.nn.embedding_lookup(self.embedding, inputs), keep_prob=self.keep_prop)  # batch*hidden_size
+        for i in xrange(self.num_layers):
+            output = tf.nn.relu(output)
+            output, state = tf.nn.dynamic_rnn(self.gru_cell, output, initial_state=state, dtype=tf.float32)
+        output = tf.tensordot(output, self.linear, axes=[[2], [0]])  # b*1*hidden_size hidden_size*vocab_size
+        return output, state  # b*1*vocab_size(unscaled), b*max_length
+    
+    
 class AttentionDecoder(object):
     """
     seq2seq decoder with attention.
